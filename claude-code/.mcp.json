@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "deep-memory": {
+      "type": "http",
+      "url": "${DM_MEMORYD_URL:-https://dm.exobrain.cc}/mcp",
+      "headersHelper": "${CLAUDE_PLUGIN_ROOT}/bin/memory-hook mcp-headers"
+    }
+  }
+}

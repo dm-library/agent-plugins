@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "deep-memory": {
+      "url": "${DM_MEMORYD_URL:-https://dm.exobrain.cc}/mcp",
+      "bearer_token_env_var": "DM_API_KEY"
+    }
+  }
+}

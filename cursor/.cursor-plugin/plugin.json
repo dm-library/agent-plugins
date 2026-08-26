@@ -1,0 +1,15 @@
+{
+  "name": "deep-memory",
+  "version": "0.2.0",
+  "description": "跨工具个人记忆：采集完整会话，自动提取带证据的项目决策与工作情景，并在后续开发中召回",
+  "author": {
+    "name": "dm-library"
+  },
+  "keywords": [
+    "memory",
+    "hooks",
+    "mcp"
+  ],
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./mcp.json"
+}

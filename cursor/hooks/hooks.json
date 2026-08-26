@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/bin/memory-hook session-start --agent cursor",
+        "timeout": 5
+      }
+    ],
+    "stop": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/bin/memory-hook stop --agent cursor",
+        "timeout": 15
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "${CURSOR_PLUGIN_ROOT}/bin/memory-hook session-end --agent cursor",
+        "timeout": 5
+      }
+    ]
+  }
+}

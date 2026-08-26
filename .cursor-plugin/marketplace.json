@@ -1,0 +1,14 @@
+{
+  "name": "deep-memory",
+  "owner": { "name": "dm-library" },
+  "metadata": {
+    "description": "Deep Memory Cursor plugins"
+  },
+  "plugins": [
+    {
+      "name": "deep-memory",
+      "source": "./cursor",
+      "description": "跨工具个人记忆：采集会话增量入库，会话开始注入用户画像与项目相关记忆"
+    }
+  ]
+}

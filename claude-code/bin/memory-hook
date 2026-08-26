@@ -1,0 +1,79 @@
+#!/bin/sh
+# memory-hook 启动器：插件仓库里只提交这个几 KB 的脚本，真二进制按版本从 GitHub Releases 下载到
+#   ${XDG_DATA_HOME:-~/.local/share}/deep-memory/bin/<version>/memory-hook
+# 校验 sha256 后 exec。三条取二进制的路径，按优先级：
+#   1. 同目录 memory-hook.local（本地开发：`make plugins` 拷进来，不提交）
+#   2. 环境变量 DM_HOOK_BIN 指向的可执行文件
+#   3. 版本缓存；没有则下载。session-start 只有 5 秒超时，首次下载在后台进行、本次直接退出，
+#      下一次会话正常；其余子命令同步下载。
+set -eu
+
+here=$(cd "$(dirname "$0")" && pwd)
+if [ -x "$here/memory-hook.local" ]; then
+  exec "$here/memory-hook.local" "$@"
+fi
+if [ -n "${DM_HOOK_BIN:-}" ] && [ -x "$DM_HOOK_BIN" ]; then
+  exec "$DM_HOOK_BIN" "$@"
+fi
+
+version=$(cat "$here/VERSION" 2>/dev/null || echo "")
+if [ -z "$version" ]; then
+  echo "memory-hook: 缺少 $here/VERSION" >&2
+  exit 0
+fi
+repo=${DM_PLUGIN_REPO:-dm-library/agent-plugins}
+
+case "$(uname -s)-$(uname -m)" in
+  Darwin-arm64)  target=aarch64-apple-darwin ;;
+  Darwin-x86_64) target=x86_64-apple-darwin ;;
+  Linux-x86_64)  target=x86_64-unknown-linux-gnu ;;
+  Linux-aarch64) target=aarch64-unknown-linux-gnu ;;
+  *) echo "memory-hook: 不支持的平台 $(uname -s)-$(uname -m)" >&2; exit 0 ;;
+esac
+
+cache="${XDG_DATA_HOME:-$HOME/.local/share}/deep-memory/bin/$version"
+bin="$cache/memory-hook"
+
+download() {
+  url="https://github.com/$repo/releases/download/v$version/memory-hook-$target"
+  mkdir -p "$cache"
+  tmp="$bin.tmp.$$"
+  if ! curl -fsSL --retry 2 -o "$tmp" "$url"; then
+    # 私有仓库：匿名下载 404，有 gh 登录则用它取资产
+    rm -f "$tmp"
+    command -v gh >/dev/null 2>&1 || return 1
+    gh release download "v$version" --repo "$repo" --pattern "memory-hook-$target" --output "$tmp" --clobber >/dev/null 2>&1 || { rm -f "$tmp"; return 1; }
+  fi
+  expected=$(curl -fsSL "$url.sha256" 2>/dev/null | awk '{print $1}')
+  if [ -z "$expected" ] && command -v gh >/dev/null 2>&1; then
+    expected=$(gh release download "v$version" --repo "$repo" --pattern "memory-hook-$target.sha256" --output - 2>/dev/null | awk '{print $1}')
+  fi
+  [ -n "$expected" ] || { rm -f "$tmp"; return 1; }
+  if command -v sha256sum >/dev/null 2>&1; then
+    actual=$(sha256sum "$tmp" | awk '{print $1}')
+  else
+    actual=$(shasum -a 256 "$tmp" | awk '{print $1}')
+  fi
+  if [ "$expected" != "$actual" ]; then
+    echo "memory-hook: 下载校验失败（${url}）" >&2
+    rm -f "$tmp"
+    return 1
+  fi
+  chmod +x "$tmp"
+  mv "$tmp" "$bin"
+}
+
+if [ ! -x "$bin" ]; then
+  case "${1:-}" in
+    session-start|stop|session-end)
+      # hook 路径：不能阻塞宿主；后台下载，本次静默退出（永远 exit 0）
+      (download >/dev/null 2>&1 || true) &
+      exit 0
+      ;;
+    *)
+      echo "memory-hook: 首次使用，下载 v${version}（${target}）…" >&2
+      download || { echo "memory-hook: 下载失败，稍后重试或设 DM_HOOK_BIN 指向本地构建" >&2; exit 1; }
+      ;;
+  esac
+fi
+exec "$bin" "$@"
