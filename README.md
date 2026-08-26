@@ -3,7 +3,6 @@
 Deep Memory 是面向开发者的跨工具个人记忆系统。本仓库为 **Claude Code**、**Codex** 和 **Cursor** 提供官方插件支持，使不同 Coding Agent 能够无缝共享和演进长期项目记忆、用户决策与工作情景。
 
 - **仓库地址**：[https://github.com/dm-library/agent-plugins](https://github.com/dm-library/agent-plugins)
-- **服务端项目**：[https://github.com/dm-library/memory](https://github.com/dm-library/memory)
 
 ---
 
@@ -99,15 +98,6 @@ Deep Memory 支持多种凭据提供方式：
 | `DM_CONTEXT_BUDGET` | `context_budget` | `1500` | SessionStart 注入的 token 预算上限 |
 | `DM_EXCLUDE_DIRS` | `exclude` | 空 | 逗号分隔的目录路径前缀，命中时跳过采集与注入 |
 | `DM_STATE_DIR` | `state_dir` | `~/.local/state/deep-memory` | 本机游标、缓存与重试退避状态目录 |
-
----
-
-## 本地开发与调试
-
-若需要调试本地构建的 `memory-hook` 二进制：
-
-- **方式一（环境变量）**：设置 `export DM_HOOK_BIN=/path/to/target/debug/memory-hook`。
-- **方式二（本地覆盖）**：将编译生成的 `memory-hook` 复制为对应插件目录下的 `bin/memory-hook.local`（已在 `.gitignore` 中排除），启动器将优先执行该本地文件。
 
 ---
 

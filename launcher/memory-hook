@@ -2,7 +2,7 @@
 # memory-hook 启动器：插件仓库里只提交这个几 KB 的脚本，真二进制按版本从 GitHub Releases 下载到
 #   ${XDG_DATA_HOME:-~/.local/share}/deep-memory/bin/<version>/memory-hook
 # 校验 sha256 后 exec。三条取二进制的路径，按优先级：
-#   1. 同目录 memory-hook.local（本地开发：`make plugins` 拷进来，不提交）
+#   1. 同目录 memory-hook.local（本地覆盖，不提交）
 #   2. 环境变量 DM_HOOK_BIN 指向的可执行文件
 #   3. 版本缓存；没有则下载。session-start 只有 5 秒超时，首次下载在后台进行、本次直接退出，
 #      下一次会话正常；其余子命令同步下载。
@@ -72,7 +72,7 @@ if [ ! -x "$bin" ]; then
       ;;
     *)
       echo "memory-hook: 首次使用，下载 v${version}（${target}）…" >&2
-      download || { echo "memory-hook: 下载失败，稍后重试或设 DM_HOOK_BIN 指向本地构建" >&2; exit 1; }
+      download || { echo "memory-hook: 下载失败，请稍后重试" >&2; exit 1; }
       ;;
   esac
 fi
