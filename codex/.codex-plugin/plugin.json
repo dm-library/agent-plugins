@@ -1,6 +1,6 @@
 {
   "name": "deep-memory-codex",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "跨工具个人记忆：采集完整会话，自动提取带证据的项目决策与工作情景，并在后续开发中召回",
   "author": {
     "name": "dm-library"
