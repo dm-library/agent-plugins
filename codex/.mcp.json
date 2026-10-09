@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "deep-memory": {
-      "url": "${DM_MEMORYD_URL:-https://dm.exobrain.cc}/mcp",
-      "bearer_token_env_var": "DM_API_KEY"
+      "url": "https://dm.exobrain.cc/mcp",
+      "http_headers_helper": "for h in \"${CODEX_HOME:-$HOME/.codex}\"/plugins/cache/deep-memory/deep-memory-codex/*/bin/memory-hook \"${XDG_DATA_HOME:-$HOME/.local/share}\"/deep-memory/bin/*/memory-hook; do [ -x \"$h\" ] && exec \"$h\" mcp-headers; done; exit 1"
     }
   }
 }

@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/bin/memory-hook stop --agent codex",
+            "command": "${PLUGIN_ROOT}/bin/memory-hook stop --agent codex --timeout 15",
             "timeout": 15,
             "async": true
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${PLUGIN_ROOT}/bin/memory-hook session-end --agent codex",
+            "command": "${PLUGIN_ROOT}/bin/memory-hook session-end --agent codex --timeout 3",
             "timeout": 3
           }
         ]

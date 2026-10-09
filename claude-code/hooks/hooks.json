@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/bin/memory-hook stop --agent claude-code",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/memory-hook stop --agent claude-code --timeout 15",
             "timeout": 15,
             "async": true
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/bin/memory-hook session-end --agent claude-code",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/memory-hook session-end --agent claude-code --timeout 5",
             "timeout": 5,
             "async": true
           }
