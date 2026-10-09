@@ -2,7 +2,7 @@
   "mcpServers": {
     "deep-memory": {
       "url": "https://dm.exobrain.cc/mcp",
-      "http_headers_helper": "for h in \"${CODEX_HOME:-$HOME/.codex}\"/plugins/cache/deep-memory/deep-memory-codex/*/bin/memory-hook \"${XDG_DATA_HOME:-$HOME/.local/share}\"/deep-memory/bin/*/memory-hook; do [ -x \"$h\" ] && exec \"$h\" mcp-headers; done; exit 1"
+      "http_headers_helper": "for h in \"${CODEX_HOME:-$HOME/.codex}\"/plugins/cache/deep-memory/deep-memory-codex/*/bin/memory-hook \"${XDG_DATA_HOME:-$HOME/.local/share}\"/deep-memory/bin/*/memory-hook; do [ -x \"$h\" ] && exec \"$h\" mcp-headers --url https://dm.exobrain.cc/mcp; done; exit 1"
     }
   }
 }
