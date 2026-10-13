@@ -1,4 +1,5 @@
 #!/bin/sh
+# 生成文件，请勿手改：源文件是 launcher/memory-hook，改完运行 sh scripts/sync-launcher.sh
 # memory-hook 启动器：插件仓库里只提交这个几 KB 的脚本，真二进制按版本从 GitHub Releases 下载到
 #   ${XDG_DATA_HOME:-~/.local/share}/deep-memory/bin/<version>/memory-hook
 # 校验 sha256 后 exec。三条取二进制的路径，按优先级：

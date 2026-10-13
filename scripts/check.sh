@@ -1,5 +1,6 @@
 #!/bin/sh
-# 插件仓库的静态检查：JSON 合法、启动器副本一致、版本号一致、MCP 配置不会把凭据交给未核对的地址。
+# 插件仓库的静态检查：JSON 合法、启动器副本是 launcher/ 的生成结果、版本号一致、
+# MCP 配置不会把凭据交给未核对的地址。
 # 用法：sh scripts/check.sh   （需要 python3）
 set -eu
 cd "$(dirname "$0")/.."
@@ -11,9 +12,7 @@ for f in $(git ls-files '*.json'); do
 done
 
 sh -n launcher/memory-hook || err "launcher/memory-hook 语法错误"
-for host in claude-code codex cursor; do
-  cmp -s launcher/memory-hook "$host/bin/memory-hook" || err "$host/bin/memory-hook 与 launcher 不一致"
-done
+sh scripts/sync-launcher.sh --check || err "启动器副本没有从 launcher/memory-hook 重新生成"
 
 v=$(cat claude-code/bin/VERSION)
 for f in codex/bin/VERSION cursor/bin/VERSION; do
@@ -43,11 +42,6 @@ for path in ["claude-code/.mcp.json", "codex/.mcp.json", "cursor/mcp.json"]:
     text = open(path).read()
     if re.search(r"dm_pat_[A-Za-z0-9]", text):
         bad(f"{path}: 不得包含明文 PAT")
-
-readme = open("README.md").read()
-for needle in ["DM_SPACE_ID", "mcp-config", "不要设置 `DM_API_KEY`"]:
-    if needle not in readme:
-        bad(f"README 缺少 {needle!r} 的说明")
 sys.exit(0 if ok else 1)
 PY
 

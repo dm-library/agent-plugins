@@ -22,6 +22,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: scripts/check.sh
         run: sh scripts/check.sh
+      - name: scripts/test.sh (the checks catch drift)
+        run: sh scripts/test.sh
 
   launcher:
     name: Launcher (shellcheck + smoke)
@@ -31,7 +33,7 @@ jobs:
       - name: shellcheck (POSIX sh)
         run: |
           shellcheck --version
-          shellcheck -s sh launcher/memory-hook scripts/check.sh \
+          shellcheck -s sh launcher/memory-hook scripts/check.sh scripts/sync-launcher.sh scripts/test.sh \
             claude-code/bin/memory-hook codex/bin/memory-hook cursor/bin/memory-hook
       # DM_HOOK_BIN 覆盖：不联网、不下载，只验证启动器能把参数原样转交给指定的二进制
       - name: Launcher forwards to DM_HOOK_BIN
