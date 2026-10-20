@@ -24,6 +24,10 @@ jobs:
         run: sh scripts/check.sh
       - name: scripts/test.sh (the checks catch drift)
         run: sh scripts/test.sh
+      - name: Release asset fixtures (present passes, missing fails)
+        run: sh scripts/test-release-assets.sh
+      - name: Launcher download failures are not silent
+        run: sh scripts/test-launcher-download.sh
 
   launcher:
     name: Launcher (shellcheck + smoke)
@@ -34,6 +38,7 @@ jobs:
         run: |
           shellcheck --version
           shellcheck -s sh launcher/memory-hook scripts/check.sh scripts/sync-launcher.sh scripts/test.sh \
+            scripts/check-release-assets.sh scripts/test-release-assets.sh scripts/test-launcher-download.sh \
             claude-code/bin/memory-hook codex/bin/memory-hook cursor/bin/memory-hook
       # DM_HOOK_BIN 覆盖：不联网、不下载，只验证启动器能把参数原样转交给指定的二进制
       - name: Launcher forwards to DM_HOOK_BIN
@@ -42,3 +47,15 @@ jobs:
             out=$(DM_HOOK_BIN=/bin/echo "$host/bin/memory-hook" "smoke-$host")
             [ "$out" = "smoke-$host" ] || { echo "$host: got '$out'"; exit 1; }
           done
+
+  # 当前 VERSION=0.4.1，发布仓库还没有带 memory-hook 资产的 v0.4.1，所以这个作业是红的。
+  # 变绿只有两条路：发布带齐资产的 v0.4.1，或把 VERSION 退回已有资产的版本。这里不代选。
+  version-release-assets:
+    name: VERSION has Release assets
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: declared VERSION must have memory-hook assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: sh scripts/check-release-assets.sh

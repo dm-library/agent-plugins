@@ -4,8 +4,8 @@
 # 校验 sha256 后 exec。三条取二进制的路径，按优先级：
 #   1. 同目录 memory-hook.local（本地覆盖，不提交）
 #   2. 环境变量 DM_HOOK_BIN 指向的可执行文件
-#   3. 版本缓存；没有则下载。session-start 只有 5 秒超时，首次下载在后台进行、本次直接退出，
-#      下一次会话正常；其余子命令同步下载。
+#   3. 版本缓存；没有则下载。404、其他非 2xx、空正文、校验失败都要写明原因并以非 0 退出，
+#      安装命令和 session-start / stop / session-end 都不能静默空跑。
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -34,21 +34,65 @@ esac
 cache="${XDG_DATA_HOME:-$HOME/.local/share}/deep-memory/bin/$version"
 bin="$cache/memory-hook"
 
+# fetch_to <url> <dest>：把正文写入 dest，并把最终 HTTP 状态码打到标准输出。连不上时状态码为 000。
+fetch_to() {
+  _url=$1
+  _dest=$2
+  _code=$(curl -sS -L --retry 2 --output "$_dest" --write-out '%{http_code}' "$_url" 2>/dev/null) || _code=${_code:-000}
+  _code=$(printf '%s' "$_code" | tr -cd '0-9')
+  [ -n "$_code" ] || _code=000
+  printf '%s' "$_code"
+}
+
 download() {
   url="https://github.com/$repo/releases/download/v$version/memory-hook-$target"
   mkdir -p "$cache"
   tmp="$bin.tmp.$$"
-  if ! curl -fsSL --retry 2 -o "$tmp" "$url"; then
-    # 私有仓库：匿名下载 404，有 gh 登录则用它取资产
-    rm -f "$tmp"
-    command -v gh >/dev/null 2>&1 || return 1
-    gh release download "v$version" --repo "$repo" --pattern "memory-hook-$target" --output "$tmp" --clobber >/dev/null 2>&1 || { rm -f "$tmp"; return 1; }
+  rm -f "$tmp" "$tmp.sha"
+
+  code=$(fetch_to "$url" "$tmp")
+  if [ "$code" != "200" ] || [ ! -s "$tmp" ]; then
+    if command -v gh >/dev/null 2>&1; then
+      rm -f "$tmp"
+      if gh release download "v$version" --repo "$repo" --pattern "memory-hook-$target" --output "$tmp" --clobber >/dev/null 2>&1 && [ -s "$tmp" ]; then
+        code=200
+      fi
+    fi
   fi
-  expected=$(curl -fsSL "$url.sha256" 2>/dev/null | awk '{print $1}')
+
+  if [ "$code" = "404" ]; then
+    echo "memory-hook: 下载失败：Release v${version} 没有资产 memory-hook-${target}（HTTP 404，$url）" >&2
+    rm -f "$tmp" "$tmp.sha"
+    return 1
+  fi
+  case "$code" in
+    2??) ;;
+    *)
+      echo "memory-hook: 下载失败：HTTP ${code}（$url）" >&2
+      rm -f "$tmp" "$tmp.sha"
+      return 1
+      ;;
+  esac
+  if [ ! -s "$tmp" ]; then
+    echo "memory-hook: 下载失败：响应正文为空（$url）" >&2
+    rm -f "$tmp" "$tmp.sha"
+    return 1
+  fi
+
+  sha_code=$(fetch_to "$url.sha256" "$tmp.sha")
+  expected=
+  if [ "$sha_code" = "200" ] && [ -s "$tmp.sha" ]; then
+    expected=$(awk '{print $1; exit}' "$tmp.sha")
+  fi
   if [ -z "$expected" ] && command -v gh >/dev/null 2>&1; then
-    expected=$(gh release download "v$version" --repo "$repo" --pattern "memory-hook-$target.sha256" --output - 2>/dev/null | awk '{print $1}')
+    gh_sha=$(gh release download "v$version" --repo "$repo" --pattern "memory-hook-$target.sha256" --output - 2>/dev/null || true)
+    expected=$(printf '%s\n' "$gh_sha" | awk '{print $1; exit}')
   fi
-  [ -n "$expected" ] || { rm -f "$tmp"; return 1; }
+  if [ -z "$expected" ]; then
+    echo "memory-hook: 下载校验失败：缺少 memory-hook-${target}.sha256（$url.sha256）" >&2
+    rm -f "$tmp" "$tmp.sha"
+    return 1
+  fi
   if command -v sha256sum >/dev/null 2>&1; then
     actual=$(sha256sum "$tmp" | awk '{print $1}')
   else
@@ -56,24 +100,16 @@ download() {
   fi
   if [ "$expected" != "$actual" ]; then
     echo "memory-hook: 下载校验失败（${url}）" >&2
-    rm -f "$tmp"
+    rm -f "$tmp" "$tmp.sha"
     return 1
   fi
   chmod +x "$tmp"
   mv "$tmp" "$bin"
+  rm -f "$tmp.sha"
 }
 
 if [ ! -x "$bin" ]; then
-  case "${1:-}" in
-    session-start|stop|session-end)
-      # hook 路径：不能阻塞宿主；后台下载，本次静默退出（永远 exit 0）
-      (download >/dev/null 2>&1 || true) &
-      exit 0
-      ;;
-    *)
-      echo "memory-hook: 首次使用，下载 v${version}（${target}）…" >&2
-      download || { echo "memory-hook: 下载失败，请稍后重试" >&2; exit 1; }
-      ;;
-  esac
+  echo "memory-hook: 正在下载 v${version}（${target}）…" >&2
+  download || exit 1
 fi
 exec "$bin" "$@"
