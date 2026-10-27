@@ -32,7 +32,7 @@ claude plugin install deep-memory@deep-memory
 
 **登录授权**：在 Claude Code 会话中运行斜杠命令：
 ```
-/deep-memory:login <控制台「接入与密钥」中复制的接入码>
+/deep-memory:login <控制台「工具」里生成的接入码>
 ```
 也可在终端直接执行：
 ```bash
@@ -85,7 +85,7 @@ ln -sfn "$(pwd)/agent-plugins/cursor" ~/.cursor/plugins/local/deep-memory
 
 ## 认证与登录
 
-推荐用**一键接入码**：在 Web 控制台侧栏「接入与密钥」中点击「复制一句话」，在 Agent 对话中运行 `/deep-memory:login <接入码>`（或终端执行 `memory-hook redeem <接入码>`）。系统会换取长期凭据并写入 `~/.config/deep-memory/credentials.toml`（PAT、space、登录时的服务端地址）。
+推荐用**一键接入码**：在 Web 控制台「工具」→「连接新工具」里生成接入码，在 Agent 对话中运行 `/deep-memory:login <接入码>`（或终端执行 `memory-hook redeem <接入码>`）。系统会换取长期凭据并写入 `~/.config/deep-memory/credentials.toml`（PAT、space、登录时的服务端地址）。
 
 凭据由谁读取：
 
@@ -99,7 +99,7 @@ ln -sfn "$(pwd)/agent-plugins/cursor" ~/.cursor/plugins/local/deep-memory
 
 > `DM_API_KEY` 一旦设置就会压过登录凭据（`memory-hook status` 会提示）。只有 Cursor 的内置 MCP 条目需要它；设置时请与登录得到的 PAT 保持一致，重新登录后记得同步更新。
 >
-> **设置 `DM_API_KEY` 时必须同时设置 `DM_SPACE_ID`。** 服务端没有默认 space：只有 key 没有 space 时，请求会被拒绝（`SCOPE_NOT_SPECIFIED`），记忆注入与会话采集都不会生效。从 v0.4.1 起 hooks 会对这种配置给出明确警告（Claude Code / Codex 显示在会话开始的系统消息里，Cursor 附在注入上下文里，另写一行到 stderr），`memory-hook status` 也会提示。space id 可在控制台「接入与密钥」或 `credentials.toml` 的 `space_id` 查到。
+> **设置 `DM_API_KEY` 时必须同时设置 `DM_SPACE_ID`。** 服务端没有默认 space：只有 key 没有 space 时，请求会被拒绝（`SCOPE_NOT_SPECIFIED`），记忆注入与会话采集都不会生效。从 v0.4.1 起 hooks 会对这种配置给出明确警告（Claude Code / Codex 显示在会话开始的系统消息里，Cursor 附在注入上下文里，另写一行到 stderr），`memory-hook status` 也会提示。space id 可在控制台「工具」或 `credentials.toml` 的 `space_id` 查到。
 
 **凭据只发给它所属的服务端**（v0.4.1）：
 - 登录凭据绑定 `memory-hook login` 时的服务端地址。`DM_MEMORYD_URL` 指向别的地址时，hooks 不会把登录凭据发过去（视同未登录并给出警告）。
